@@ -1,0 +1,22 @@
+server:
+  port: 8090
+
+zuul:
+  routes:
+    data:
+      path: /api/**
+      serviceId: data
+      
+data:
+  ribbon:
+      listOfServers: http://localhost:9090/
+
+ribbon:
+  eureka:
+   enabled: false
+
+management:
+  security:
+    enabled: false
+
+       
