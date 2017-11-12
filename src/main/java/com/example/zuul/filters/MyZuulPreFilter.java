@@ -3,6 +3,8 @@ package com.example.zuul.filters;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.Cookie;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -59,6 +61,12 @@ public class MyZuulPreFilter extends ZuulFilter {
 			map.put("SM_USER", smUser);
 			map.put("SM_USERGROUPS", smUserGroups);
 			ctx.getZuulRequestHeaders().putAll(map);
+			//get cookie .getAttribute("SMSESSION")
+			Cookie[] cookies = ctx.getRequest().getCookies();
+			if(cookies != null && cookies.length>0){
+				for(Cookie c : cookies)
+				System.out.println("cookie name" + c.getName() + " cookie Value ="+c.getValue());
+			}
 	       
 		}
 		return null;
@@ -72,7 +80,7 @@ public class MyZuulPreFilter extends ZuulFilter {
 	@Override
 	public int filterOrder() {
 		
-		return 0;
+		return 1;
 	}
 
 	@Override

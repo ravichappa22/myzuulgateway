@@ -5,6 +5,7 @@ zuul:
   routes:
     data:
       path: /api/**
+      sensitiveHeaders: Cookie
       serviceId: data
       
 data:

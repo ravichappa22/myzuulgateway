@@ -11,7 +11,7 @@ public class MyZuulRouteFilter extends ZuulFilter {
 
 	@Override
 	public boolean shouldFilter() {
-		return true;
+		return RequestContext.getCurrentContext().sendZuulResponse();
 	}
 
 	@Override
@@ -25,7 +25,7 @@ public class MyZuulRouteFilter extends ZuulFilter {
 	@Override
 	public int filterOrder() {
 		
-		return 0;
+		return 1;
 	}
 
 	@Override

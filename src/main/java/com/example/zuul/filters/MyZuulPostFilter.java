@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
+import javax.servlet.http.Cookie;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
+import com.netflix.util.Pair;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 
@@ -15,8 +18,7 @@ public class MyZuulPostFilter extends ZuulFilter {
 
 	@Override
 	public boolean shouldFilter() {
-		
-		return true;
+		return RequestContext.getCurrentContext().sendZuulResponse();
 	}
 
 	@Override
@@ -26,10 +28,25 @@ public class MyZuulPostFilter extends ZuulFilter {
 		//map.put("Authorization", token);
 	//	map.put("SM_USER", smUser);
 		//map.put("SM_USERGROUPS", smUserGroups);
-		System.out.println("In Route Filter" + ctx.getZuulRequestHeaders().get("Authorization"));
-		ctx.getResponse().addHeader("Authorization",ctx.getZuulRequestHeaders().get("Authorization"));
+		//Pair<String, String> headerPairs= new Pair<String, String>("SM_USER", ctx.getZuulRequestHeaders().get(key));
 		
-
+		System.out.println("In POST Filter" + ctx.getZuulRequestHeaders().get("Authorization"));
+		ctx.getResponse().addHeader("Authorization",ctx.getZuulRequestHeaders().get("Authorization"));
+		ctx.getResponse().addHeader("SM_USER",ctx.getZuulRequestHeaders().get("SM_USER"));
+		ctx.getResponse().addHeader("SM_USERGROUPS",ctx.getZuulRequestHeaders().get("SM_USERGROUPS"));
+	
+		//Cookie c = new Cookie("SMSESSION", "JESSIONID");
+		//c.setMaxAge(2);
+		Cookie[] cookies = ctx.getRequest().getCookies();
+		if(cookies != null && cookies.length>0){
+			for(Cookie cookie : cookies){
+			System.out.println("adding cookie in post filter");
+			ctx.getResponse().addCookie(cookie);
+			}
+		}
+		
+		//}
+		
 		InputStream stream = ctx.getResponseDataStream();
 		String body=null;
 		try {
@@ -38,7 +55,7 @@ public class MyZuulPostFilter extends ZuulFilter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ctx.setResponseBody("Modified via setResponseBody(): " + body);
+		ctx.setResponseBody(body);
 		
 		System.out.println("ResponseBody=" + ctx.getResponseBody());
 		
