@@ -20,9 +20,6 @@ import com.netflix.zuul.context.RequestContext;
 @Component
 public class MyZuulPreFilter extends ZuulFilter {
 	
-	/*@Autowired
-	private TokenAuthClient tokenAuthClient;*/
-	
 	@Autowired
 	private RestTemplate restTemplate;
 
@@ -39,9 +36,10 @@ public class MyZuulPreFilter extends ZuulFilter {
         
 		String smUser = ctx.getRequest().getHeader("SM_USER");
 		String smUserGroups = ctx.getRequest().getHeader("SM_USERGROUPS");
+		String oAuthToken = ctx.getRequest().getHeader("Authorization");
 		if(smUser == null || smUserGroups == null){
 			ctx.setSendZuulResponse(false);
-		}else{
+		}else if(oAuthToken == null){
 			//get cookie .getAttribute("SMSESSION")
 			Cookie[] cookies = ctx.getRequest().getCookies();
 			if(cookies != null && cookies.length>0){
@@ -62,16 +60,16 @@ public class MyZuulPreFilter extends ZuulFilter {
 	        }
 	        
 			System.out.println("Token we got>>>= " + response);
-	        Map<String, String> map = new HashMap<String, String>();
-	        System.out.println("body"+ response.getBody());
-			map.put("Authorization", response.getBody().getTokenType()+" "+response.getBody().getValue());
-	       
-			map.put("SM_USER", smUser);
-			map.put("SM_USERGROUPS", smUserGroups);
-			ctx.getZuulRequestHeaders().putAll(map);
-			
+			oAuthToken = response.getBody().getTokenType()+" "+response.getBody().getValue();
 	       
 		}
+		
+		 Map<String, String> map = new HashMap<String, String>();
+	    
+		 map.put("Authorization", oAuthToken);
+		 map.put("SM_USER", smUser);
+		 map.put("SM_USERGROUPS", smUserGroups);
+			ctx.getZuulRequestHeaders().putAll(map); 
 		return null;
 	}
 

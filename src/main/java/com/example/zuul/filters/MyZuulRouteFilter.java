@@ -31,7 +31,7 @@ public class MyZuulRouteFilter extends ZuulFilter {
 	@Override
 	public String filterType() {
 		
-		return "post";
+		return "route";
 	}
 
 }

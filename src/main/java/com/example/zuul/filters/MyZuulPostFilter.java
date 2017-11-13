@@ -24,17 +24,12 @@ public class MyZuulPostFilter extends ZuulFilter {
 	@Override
 	public Object run() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-		//Map<String, String> map = new HashMap<String, String>();
-		//map.put("Authorization", token);
-	//	map.put("SM_USER", smUser);
-		//map.put("SM_USERGROUPS", smUserGroups);
-		//Pair<String, String> headerPairs= new Pair<String, String>("SM_USER", ctx.getZuulRequestHeaders().get(key));
+		
 		
 		System.out.println("In POST Filter" + ctx.getZuulRequestHeaders().get("Authorization"));
 		ctx.getResponse().addHeader("Authorization",ctx.getZuulRequestHeaders().get("Authorization"));
 		ctx.getResponse().addHeader("SM_USER",ctx.getZuulRequestHeaders().get("SM_USER"));
 		ctx.getResponse().addHeader("SM_USERGROUPS",ctx.getZuulRequestHeaders().get("SM_USERGROUPS"));
-	
 		//Cookie c = new Cookie("SMSESSION", "JESSIONID");
 		//c.setMaxAge(2);
 		Cookie[] cookies = ctx.getRequest().getCookies();
