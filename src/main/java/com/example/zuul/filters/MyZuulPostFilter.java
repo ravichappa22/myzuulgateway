@@ -26,7 +26,7 @@ public class MyZuulPostFilter extends ZuulFilter {
 		RequestContext ctx = RequestContext.getCurrentContext();
 		
 		
-		System.out.println("In POST Filter" + ctx.getZuulRequestHeaders().get("Authorization"));
+		System.out.println("POST FILTER >>" + ctx.getZuulRequestHeaders().get("Authorization"));
 		ctx.getResponse().addHeader("Authorization",ctx.getZuulRequestHeaders().get("Authorization"));
 		ctx.getResponse().addHeader("SM_USER",ctx.getZuulRequestHeaders().get("SM_USER"));
 		ctx.getResponse().addHeader("SM_USERGROUPS",ctx.getZuulRequestHeaders().get("SM_USERGROUPS"));
@@ -35,8 +35,8 @@ public class MyZuulPostFilter extends ZuulFilter {
 		Cookie[] cookies = ctx.getRequest().getCookies();
 		if(cookies != null && cookies.length>0){
 			for(Cookie cookie : cookies){
-			System.out.println("adding cookie in post filter");
-			cookie.setMaxAge(2);
+			System.out.println("ROUTE FILTER >>adding cookie in post filter");
+			cookie.setMaxAge(0);
 			ctx.getResponse().addCookie(cookie);
 			}
 		}
@@ -53,7 +53,7 @@ public class MyZuulPostFilter extends ZuulFilter {
 		}
 		ctx.setResponseBody(body);
 		
-		System.out.println("ResponseBody=" + ctx.getResponseBody());
+		System.out.println("ROUTE FILTER >>ResponseBody=" + ctx.getResponseBody());
 		
 		return null;
 	}

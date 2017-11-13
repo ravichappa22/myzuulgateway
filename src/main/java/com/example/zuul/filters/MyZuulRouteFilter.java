@@ -16,8 +16,8 @@ public class MyZuulRouteFilter extends ZuulFilter {
 
 	@Override
 	public Object run() {
-		System.out.println("Routing to Service");
-		System.out.println("Request Headers" + RequestContext.getCurrentContext().getZuulRequestHeaders());
+		System.out.println("ROUTE FILTER >>Routing to Service");
+		System.out.println("ROUTE FILTER >>Request Headers while Calling Backed Service" + RequestContext.getCurrentContext().getZuulRequestHeaders());
 		
 		return null;
 	}

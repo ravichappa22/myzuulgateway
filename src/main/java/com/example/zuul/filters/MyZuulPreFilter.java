@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -37,31 +38,34 @@ public class MyZuulPreFilter extends ZuulFilter {
 		String smUser = ctx.getRequest().getHeader("SM_USER");
 		String smUserGroups = ctx.getRequest().getHeader("SM_USERGROUPS");
 		String oAuthToken = ctx.getRequest().getHeader("Authorization");
-		if(smUser == null || smUserGroups == null){
+		ResponseEntity<String> tokenRespons = null;
+		if (smUser == null || smUserGroups == null) {
+			System.out.println("PRE FILTER >>SM Headers Not Present, So Not Forwarding the request");
 			ctx.setSendZuulResponse(false);
-		}else if(oAuthToken == null){
-			//get cookie .getAttribute("SMSESSION")
-			Cookie[] cookies = ctx.getRequest().getCookies();
-			if(cookies != null && cookies.length>0){
-				for(Cookie c : cookies)
-				System.out.println("cookie name" + c.getName() + " cookie Value ="+c.getValue());
+		} else if (oAuthToken == null) {
+
+			oAuthToken = getTheToken(ctx,smUser,smUserGroups);
+
+		} else {
+			// check the token to see is valid or not
+			// http://localhost:8080/auth/oauth/check_token?token=
+			try {
+				
+				/*UriComponentsBuilder builder = UriComponentsBuilder
+						.fromUriString("http://localhost:8080/auth/oauth/check_token")
+						.queryParam("token", oAuthToken.substring(7));
+				//tokenRespons = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, String.class);*/
+				tokenRespons = restTemplate.getForEntity(String.format("http://localhost:8080/auth/oauth/check_token?token=%s", oAuthToken.substring(7)), String.class);
+			} catch (Exception e) {
+				System.out.println("PRE FILTER >>Token Validation Shows Invalid");
 			}
-			
-			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.add("roles", smUserGroups);
-			httpHeaders.add("userName", smUser);
-			HttpEntity <String> httpEntity = new HttpEntity <String> (null, httpHeaders);
-		
-			ResponseEntity<DefaultOAuth2AccessToken> response = null;
-	        try{
-			    response = restTemplate.exchange("http://localhost:8080/auth/getTokenForUser", HttpMethod.GET, httpEntity, DefaultOAuth2AccessToken.class);
-	        }catch(Exception e){
-	        	e.printStackTrace();
-	        }
-	        
-			System.out.println("Token we got>>>= " + response);
-			oAuthToken = response.getBody().getTokenType()+" "+response.getBody().getValue();
-	       
+			if (tokenRespons != null && tokenRespons.getStatusCode().is2xxSuccessful()) {
+				System.out.println("PRE FILTER >>Token valid");
+			} else {
+				System.out.println("PRE FILTER >>Token Not Valid/expired, So renew it in API Gateway");
+				oAuthToken = getTheToken(ctx,smUser,smUserGroups);
+			}
+
 		}
 		
 		 Map<String, String> map = new HashMap<String, String>();
@@ -88,6 +92,32 @@ public class MyZuulPreFilter extends ZuulFilter {
 	public String filterType() {
 		
 		return "pre";
+	}
+	
+	
+	private String getTheToken(RequestContext ctx, String smUser,String smUserGroups){
+		String oAuthToken = null;
+		Cookie[] cookies = ctx.getRequest().getCookies();
+		if (cookies != null && cookies.length > 0) {
+			for (Cookie c : cookies)
+				System.out.println("PRE FILTER >>cookie name" + c.getName() + " cookie Value =" + c.getValue());
+		}
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.add("roles", smUserGroups);
+		httpHeaders.add("userName", smUser);
+		HttpEntity<String> httpEntity = new HttpEntity<String>(null, httpHeaders);
+
+		ResponseEntity<DefaultOAuth2AccessToken> response = null;
+		try {
+			response = restTemplate.exchange("http://localhost:8080/auth/getTokenForUser", HttpMethod.GET,
+					httpEntity, DefaultOAuth2AccessToken.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		oAuthToken = response.getBody().getTokenType() + " " + response.getBody().getValue();
+		System.out.println("PRE FILTER >>Token we got In API Gateway>>>= " + oAuthToken);
+		return oAuthToken;
 	}
 
 }
