@@ -41,6 +41,7 @@ public class MyZuulPostFilter extends ZuulFilter {
 		if(cookies != null && cookies.length>0){
 			for(Cookie cookie : cookies){
 			System.out.println("adding cookie in post filter");
+			cookie.setMaxAge(2);
 			ctx.getResponse().addCookie(cookie);
 			}
 		}
