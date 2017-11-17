@@ -9,7 +9,6 @@ import javax.servlet.http.Cookie;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-import com.netflix.util.Pair;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 

@@ -32,6 +32,14 @@ security:
     enabled: false
     
     
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 300000
+    
 smpath:
   not:
     applicable: /auth/oauth/token,/auth/oauth/check_token
