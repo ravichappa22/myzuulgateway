@@ -28,19 +28,8 @@ public class MyZuulPostFilter extends ZuulFilter {
 		
 		System.out.println("POST FILTER >>" + ctx.getZuulRequestHeaders().get("Authorization"));
 		ctx.getResponse().addHeader("Authorization",ctx.getZuulRequestHeaders().get("Authorization"));
-		//ctx.getResponse().addHeader("SM_USER",ctx.getZuulRequestHeaders().get("SM_USER"));
-		//ctx.getResponse().addHeader("SM_USERGROUPS",ctx.getZuulRequestHeaders().get("SM_USERGROUPS"));
-		
-		Cookie[] cookies = ctx.getRequest().getCookies();
-		/*if(cookies != null && cookies.length>0){
-			for(Cookie cookie : cookies){
-			System.out.println("ROUTE FILTER >>adding cookie in post filter");
-			cookie.setMaxAge(0);
-			ctx.getResponse().addCookie(cookie);
-			}
-		}*/
-		
-		//}
+		ctx.getResponse().addHeader("TokenRenewed",ctx.getZuulRequestHeaders().get("TokenRenewed"));
+	
 		
 		InputStream stream = ctx.getResponseDataStream();
 		String body=null;

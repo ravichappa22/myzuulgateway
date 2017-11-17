@@ -1,7 +1,6 @@
 package com.example.zuul.filters;
 
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,20 +11,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.zuul.auth.client.TokenAuthClient;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 
 @Component
 public class MyZuulPreFilter extends ZuulFilter {
 	
+	/*@Autowired
+	private RestTemplate restTemplate;*/
+	
 	@Autowired
-	private RestTemplate restTemplate;
+	private TokenAuthClient tokenAuthClient;
 	
 	@Value("${smpath.not.applicable}")
 	private String smPathsNotApplicable;
@@ -46,11 +49,12 @@ public class MyZuulPreFilter extends ZuulFilter {
         if (ctx.getResponseBody() == null ) { 
             ctx.setResponseBody("static content"); 
         } 
-        
+        Map<String, String> map = new HashMap<String, String>();
 		String smUser = ctx.getRequest().getHeader("SM_USER");
 		String smUserGroups = ctx.getRequest().getHeader("SM_USERGROUPS");
 		String oAuthToken = ctx.getRequest().getHeader("Authorization");
 		ResponseEntity<String> tokenRespons = null;
+		String tokenRenewedFlag="false";
 		pathsToSkip.contains(ctx.getRequest().getRequestURI());
 		if(pathsToSkip.contains(ctx.getRequest().getRequestURI())){
 			//Enumeration<String> parameters= ctx.getRequest().getParameterNames();
@@ -87,28 +91,30 @@ public class MyZuulPreFilter extends ZuulFilter {
 			ctx.setSendZuulResponse(false);
 		} else if (oAuthToken == null) {
 			oAuthToken = getTheToken(ctx,smUser,smUserGroups);
+			tokenRenewedFlag = "true";
 		} else {
 			//Oauth not there, but SM session is there
 			try {	
-				tokenRespons = restTemplate.getForEntity(String.format("http://localhost:8080/auth/oauth/check_token?token=%s", oAuthToken.substring(7)), String.class);
+				//tokenRespons = restTemplate.getForEntity(String.format("http://localhost:8080/auth/oauth/check_token?token=%s", oAuthToken.substring(7)), String.class);
+				 tokenRespons = tokenAuthClient.checkUserToken(oAuthToken.substring(7));
 			} catch (Exception e) {
-				System.out.println("PRE FILTER >>Check Token  Shows Invalid");
+				
+				System.out.println("PRE FILTER >>Check Token  Shows Invalid" );
 			}
 			if (tokenRespons != null && tokenRespons.getStatusCode().is2xxSuccessful()) {
 				System.out.println("PRE FILTER >>Token valid");
 			} else {
 				System.out.println("PRE FILTER >>Token Not Valid/expired, So renew it in API Gateway");
 				oAuthToken = getTheToken(ctx,smUser,smUserGroups);
+				tokenRenewedFlag = "true";
 			}
 
 		}
 		
-		 Map<String, String> map = new HashMap<String, String>();
 	    
 		 map.put("Authorization", oAuthToken);
-		// map.put("SM_USER", smUser);
-		// map.put("SM_USERGROUPS", smUserGroups);
-			ctx.getZuulRequestHeaders().putAll(map); 
+		 map.put("TokenRenewed", tokenRenewedFlag);
+		 ctx.getZuulRequestHeaders().putAll(map); 
 		return null;
 	}
 
@@ -130,6 +136,7 @@ public class MyZuulPreFilter extends ZuulFilter {
 	}
 	
 	
+	
 	private String getTheToken(RequestContext ctx, String smUser,String smUserGroups){
 		String oAuthToken = null;
 		/*Cookie[] cookies = ctx.getRequest().getCookies();
@@ -139,18 +146,22 @@ public class MyZuulPreFilter extends ZuulFilter {
 		}*/
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.add("roles", smUserGroups);
+		httpHeaders.add("groups", smUserGroups);
 		httpHeaders.add("userName", smUser);
 		HttpEntity<String> httpEntity = new HttpEntity<String>(null, httpHeaders);
 
 		ResponseEntity<DefaultOAuth2AccessToken> response = null;
+		OAuth2AccessToken oAuth2AccessToken = null;
 		try {
-			response = restTemplate.exchange("http://localhost:8080/auth/getTokenForUser", HttpMethod.GET,
-					httpEntity, DefaultOAuth2AccessToken.class);
+			/*response = restTemplate.exchange("http://localhost:8080/auth/getTokenForUser", HttpMethod.GET,
+					httpEntity, DefaultOAuth2AccessToken.class);*/
+			 oAuth2AccessToken= tokenAuthClient.userToken(smUserGroups, smUser);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		oAuthToken = response.getBody().getTokenType() + " " + response.getBody().getValue();
+		//oAuthToken = response.getBody().getTokenType() + " " + response.getBody().getValue();
+		oAuthToken = oAuth2AccessToken.getTokenType() + " " + oAuth2AccessToken.getValue();
 		System.out.println("PRE FILTER >>Token we got In API Gateway>>>= " + oAuthToken);
 		return oAuthToken;
 	}
