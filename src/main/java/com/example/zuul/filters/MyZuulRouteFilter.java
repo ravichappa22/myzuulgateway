@@ -1,5 +1,7 @@
 package com.example.zuul.filters;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import com.netflix.zuul.ZuulFilter;
@@ -17,6 +19,8 @@ public class MyZuulRouteFilter extends ZuulFilter {
 	@Override
 	public Object run() {
 		System.out.println("ROUTE FILTER >>Routing to Service");
+		UUID correlationId = UUID.randomUUID();
+		RequestContext.getCurrentContext().getZuulRequestHeaders().put("X-CorrelationId", correlationId.toString());
 		System.out.println("ROUTE FILTER >>Request Headers while Calling Backed Service" + RequestContext.getCurrentContext().getZuulRequestHeaders());
 		
 		return null;

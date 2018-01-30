@@ -9,11 +9,18 @@ zuul:
       serviceId: data
     auth:
       path: /auth/**
-      serviceId: auth 
+      serviceId: auth
+    data2:
+      path: /api2/**
+      serviceId: data2
       
 data:
   ribbon:
       listOfServers: http://localhost:9090/
+ 
+data2:
+  ribbon:
+      listOfServers: http://localhost:8030/
       
 auth:
   ribbon:

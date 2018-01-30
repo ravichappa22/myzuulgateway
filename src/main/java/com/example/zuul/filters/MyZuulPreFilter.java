@@ -43,7 +43,7 @@ public class MyZuulPreFilter extends ZuulFilter {
 	@Override
 	public Object run() {
 		RequestContext ctx = RequestContext.getCurrentContext();
-        ctx.getResponse().setStatus(200); 
+        //ctx.getResponse().setStatus(200); 
        
         // first set the static response. while next filters execute this response will be overriden, if system down this default response will be present 
         if (ctx.getResponseBody() == null ) { 
@@ -55,37 +55,7 @@ public class MyZuulPreFilter extends ZuulFilter {
 		String oAuthToken = ctx.getRequest().getHeader("Authorization");
 		ResponseEntity<String> tokenRespons = null;
 		String tokenRenewedFlag="false";
-		pathsToSkip.contains(ctx.getRequest().getRequestURI());
-		if(pathsToSkip.contains(ctx.getRequest().getRequestURI())){
-			//Enumeration<String> parameters= ctx.getRequest().getParameterNames();
-			/*while(parameters.hasMoreElements()){
-				String parameter = parameters.nextElement();
-				System.out.println("parameter=" + parameter + "paramter Value=" + ctx.getRequest().getParameter(parameter));
-			*/
-				/*Map<String, List<String>> qps = new HashMap<String, List<String>>();
-				//copy request param map
-				Map<String, String[]> qpmap = ctx.getRequest().getParameterMap();
-				StringBuilder buffer = new StringBuilder("?");
-				for (Map.Entry<String, String[]> entry : qpmap.entrySet()) {
-				String key = entry.getKey();
-				System.out.println("key=" + key);
-				String[] values = entry.getValue();
-				System.out.println("values= " + values);
-				qps.put(key, Arrays.asList(values));
-				buffer.append(key+"="+values[0]+"&");
-				
-				}
-				String  uRI= ctx.getRequest().getRequestURI().concat(buffer.toString().substring(0, buffer.toString().length()-1));
-				System.out.println("Requested URL" + ctx.getRequest().getRequestURL());
-				System.out.println("formed URI" + uRI);
-				ctx.setRequestQueryParams(qps);*/
-				
-				
-			//}
-		 
-			ctx.getZuulRequestHeaders().put("Authorization", oAuthToken);
-			return null;
-		}
+		
 		if (smUser == null || smUserGroups == null) {
 			System.out.println("PRE FILTER >>SM Headers Not Present, So Not Forwarding the request");
 			ctx.setSendZuulResponse(false);
