@@ -13,7 +13,7 @@ public class MyZuulRouteFilter extends ZuulFilter {
 
 	@Override
 	public boolean shouldFilter() {
-		return RequestContext.getCurrentContext().sendZuulResponse();
+		return false;
 	}
 
 	@Override
